@@ -14,6 +14,9 @@ public class MusicPlayer
 {
     private Player _player;
     private Song _song; //Aggregation
+    private PlayerState _state = PlayerState.Stopped;
+
+    private int _pausedPosition;
 
 
     public static void main(String[] args) {
@@ -21,14 +24,16 @@ public class MusicPlayer
 
         ArrayList<Song> songs = new ArrayList<Song>();
 
-        Song song = new Song("Songs" + File.separator + "sinister-156638.mp3");
+        SongService.GetAllSongs(songs);
 
-        player.SetSong(song);
+        player.SetSong(songs.get(0));
 
         try {
             player.Play();
             Thread.sleep(5000);
-            player.Rewind();
+            player.Pause();
+            Thread.sleep(5000);
+            player.Play();
         }
         catch (Exception e)
         {
@@ -54,6 +59,15 @@ public class MusicPlayer
             JOptionPane.showMessageDialog(null, "Select music!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+        if(_state == PlayerState.Paused)
+        {
+            Play(_pausedPosition);
+            return;
+        }
+        else if (_state == PlayerState.Playing)
+        {
+            return;
+        }
         try
         {
             FileInputStream inputStream = new FileInputStream(_song.Path);
@@ -65,6 +79,7 @@ public class MusicPlayer
                     return;
                 }
             }).start();
+            _state = PlayerState.Playing;
         }
         catch (Exception e)
         {
@@ -79,6 +94,10 @@ public class MusicPlayer
             JOptionPane.showMessageDialog(null, "Select music!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+        if (_state == PlayerState.Playing)
+        {
+            return;
+        }
         try
         {
             FileInputStream inputStream = new FileInputStream(_song.Path);
@@ -91,6 +110,7 @@ public class MusicPlayer
                     return;
                 }
             }).start();
+            _state = PlayerState.Playing;
         }
         catch (Exception e)
         {
@@ -99,25 +119,28 @@ public class MusicPlayer
     }
 
     public void Pause() {
-        if (_player != null) {
+        if (_state == PlayerState.Playing) {
+            _pausedPosition = _player.getPosition();
             _player.close();
+            _state = PlayerState.Paused;
         }
     }
 
     public void Stop() {
-        if (_player == null)
+        if (_state == PlayerState.Stopped)
         {
             return;
         }
         _player.close();
         _player = null;
         _song = null;
-
+        _state = PlayerState.Stopped;
+        _pausedPosition = 0;
     }
 
     public void Rewind()
     {
-        if (_player == null)
+        if (_state == PlayerState.Stopped)
         {
             return;
         }
@@ -127,10 +150,11 @@ public class MusicPlayer
         Play();
     }
 
-    /**true if front, false if back.\nDuration in milliseconds*/
+    /**true if front, false if back.
+     * Duration in milliseconds*/
     public void RewindFor(boolean direction, int duration)
     {
-        if (_player == null)
+        if (_state == PlayerState.Stopped)
         {
             return;
         }
