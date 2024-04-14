@@ -30,38 +30,9 @@ public class SongService {
 
         for(File file : files)
         {
-            Song song = new Song();
-            song.Title = file.getName();
-            song.Path = file.getPath();
-            song.DurationInSeconds = GetSongDuration(song.Path);
-
+            Song song = new Song(file.getPath());
             songs.add(song);
         }
     }
 
-    public static int GetSongDuration(String path)
-    {
-        try {
-            InputStream inputStream = new FileInputStream(path);
-            Bitstream bitstream = new Bitstream(inputStream);
-            Decoder decoder = new Decoder();
-
-            float durationInSeconds = 0.0f;
-
-            Header header;
-            while ((header = bitstream.readFrame()) != null) {
-                durationInSeconds += header.ms_per_frame() / 1000.0f;
-                bitstream.closeFrame();
-            }
-
-            bitstream.close();
-            inputStream.close();
-
-            return (int)durationInSeconds;
-        }
-        catch (Exception e)
-        {
-            return -1;
-        }
-    }
 }

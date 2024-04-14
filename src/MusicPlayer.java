@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,16 +8,22 @@ import javax.swing.JOptionPane;
 import javazoom.jl.decoder.Bitstream;
 import javazoom.jl.decoder.Header;
 import javazoom.jl.player.Player;
+import javazoom.jl.player.advanced.AdvancedPlayer;
+import javazoom.jl.player.advanced.PlaybackEvent;
+import javazoom.jl.player.advanced.PlaybackListener;
 import jdk.jfr.Description;
+import com.mpatric.mp3agic.Mp3File;
 
 
-public class MusicPlayer
+public class MusicPlayer extends PlaybackListener
 {
-    private Player _player;
+    private AdvancedPlayer _player;
     private Song _song; //Aggregation
     private PlayerState _state = PlayerState.Stopped;
-
+    private Thread _playThread;
     private int _pausedPosition;
+
+    private Mp3File _mp3File;
 
 
     public static void main(String[] args) {
@@ -32,8 +39,9 @@ public class MusicPlayer
             player.Play();
             Thread.sleep(5000);
             player.Pause();
-            Thread.sleep(5000);
+            Thread.sleep(2000);
             player.Play();
+            Thread.sleep(5000);
         }
         catch (Exception e)
         {
@@ -59,70 +67,54 @@ public class MusicPlayer
             JOptionPane.showMessageDialog(null, "Select music!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        if(_state == PlayerState.Paused)
-        {
-            Play(_pausedPosition);
-            return;
-        }
         else if (_state == PlayerState.Playing)
         {
             return;
         }
+
         try
         {
-            FileInputStream inputStream = new FileInputStream(_song.Path);
-            _player = new Player(inputStream);
-            new Thread(() -> {
-                try {
-                    _player.play();
-                } catch (Exception e) {
-                    return;
-                }
-            }).start();
+            FileInputStream fileInputStream = new FileInputStream(_song.GetPath());
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+
+            _player = new AdvancedPlayer(bufferedInputStream);
+            _player.setPlayBackListener(this);
+
+            StartPlayThread();
             _state = PlayerState.Playing;
         }
-        catch (Exception e)
-        {
-            return;
+        catch(Exception e){
+            e.printStackTrace();
         }
+
     }
 
-    private void Play(int skip)
+    private void StartPlayThread()
     {
-        if(_song == null)
-        {
-            JOptionPane.showMessageDialog(null, "Select music!", "Info", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        if (_state == PlayerState.Playing)
-        {
-            return;
-        }
-        try
-        {
-            FileInputStream inputStream = new FileInputStream(_song.Path);
-            long a = inputStream.skip(skip);
-            _player = new Player(inputStream);
-            new Thread(() -> {
-                try {
-                    _player.play();
-                } catch (Exception e) {
-                    return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    if(_state == PlayerState.Paused){
+                        _player.play(_pausedPosition, Integer.MAX_VALUE);
+                    }else{
+                        _player.play();
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
                 }
-            }).start();
-            _state = PlayerState.Playing;
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+            }
+        }).start();
+
     }
+
 
     public void Pause() {
         if (_state == PlayerState.Playing) {
-            _pausedPosition = _player.getPosition();
-            _player.close();
             _state = PlayerState.Paused;
+            _player.stop();
+            _player.close();
+            _player = null;
         }
     }
 
@@ -131,11 +123,11 @@ public class MusicPlayer
         {
             return;
         }
+        _player.stop();
         _player.close();
         _player = null;
         _song = null;
         _state = PlayerState.Stopped;
-        _pausedPosition = 0;
     }
 
     public void Rewind()
@@ -159,17 +151,17 @@ public class MusicPlayer
             return;
         }
         Pause();
-        int currentPosition = _player.getPosition();
-        int newPosition;
+        long newPosition;
         if(direction)
         {
-            newPosition = Math.min(_song.DurationInSeconds * 1000, currentPosition + duration);
+            newPosition = Math.min(_song.GetDurationInSeconds() * 1000, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) + duration);
         }
         else
         {
-            newPosition = Math.max(0, currentPosition - duration);
+            newPosition = Math.max(0, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) - duration);
         }
-        Play(newPosition);
+        _pausedPosition = (int)((double) newPosition * _song.GetFrameRatePerMilliseconds());
+        Play();
     }
 
     /**true if front, false if back*/
@@ -180,16 +172,27 @@ public class MusicPlayer
             return;
         }
         Pause();
-        int currentPosition = _player.getPosition();
-        int newPosition;
+        long newPosition;
         if(direction)
         {
-            newPosition = Math.min(_song.DurationInSeconds * 1000, currentPosition + 5000);
+            newPosition = Math.min(_song.GetDurationInSeconds() * 1000, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) + 5000);
         }
         else
         {
-            newPosition = Math.max(0, currentPosition - 5000);
+            newPosition = Math.max(0, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) - 5000);
         }
-        Play(newPosition);
+        _pausedPosition = (int)((double) newPosition * _song.GetFrameRatePerMilliseconds());
+        Play();
+    }
+
+
+    @Override
+    public void playbackFinished(PlaybackEvent evt) {
+        System.out.println("paused");
+
+        if(_song != null)
+        {
+            _pausedPosition += (int) ((double) evt.getFrame() * _song.GetFrameRatePerMilliseconds());
+        }
     }
 }
