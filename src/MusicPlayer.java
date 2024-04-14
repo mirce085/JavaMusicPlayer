@@ -23,40 +23,36 @@ public class MusicPlayer extends PlaybackListener
     private Thread _playThread;
     private int _pausedPosition;
     private Mp3File _mp3File;
+    private int _currentTimeInMilli;
+    private MyFirstForm _window;
 
-
-    public static void main(String[] args) {
-        MusicPlayer player = new MusicPlayer();
-
-        ArrayList<Song> songs = new ArrayList<Song>();
-
-
-        SongService.GetAllSongs(songs);
-
-        player.SetSong(songs.get(0));
-
-        try {
-            player.Play();
-            Thread.sleep(5000);
-            player.Rewind();
-            Thread.sleep(2000);
-            player.Play();
-            Thread.sleep(5000);
-        }
-        catch (Exception e)
-        {
-
-        }
+    public MusicPlayer(MyFirstForm window)
+    {
+        _window = window;
     }
+
+    public void setCurrentTimeInMilli(int timeInMilli){
+        _currentTimeInMilli = timeInMilli;
+    }
+
 
     public Song GetSong()
     {
         return _song;
     }
 
+    public PlayerState GetState()
+    {
+        return _state;
+    }
+
     public void SetSong(Song song)
     {
         // Here can be some checking
+        _currentTimeInMilli = 0;
+
+        _window.setSliderValue(_currentTimeInMilli);
+
         _song = song;
     }
 
@@ -83,6 +79,7 @@ public class MusicPlayer extends PlaybackListener
             StartPlayThread();
             Thread.sleep(1000);
             _state = PlayerState.Playing;
+            StartSliderUpdateThread();
         }
         catch(Exception e){
             e.printStackTrace();
@@ -112,6 +109,24 @@ public class MusicPlayer extends PlaybackListener
         }).start();
     }
 
+    private void StartSliderUpdateThread() {
+        new Thread(() -> {
+            while(_state == PlayerState.Playing){
+                try{
+                    _currentTimeInMilli++;
+
+                    int calculatedFrame = (int) ((double) _currentTimeInMilli * 2.08 * _song.GetFrameRatePerMilliseconds());
+
+                    _window.setSliderValue(calculatedFrame);
+
+                    Thread.sleep(1);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
 
     public void Pause() {
         if (_state == PlayerState.Playing) {
@@ -131,6 +146,8 @@ public class MusicPlayer extends PlaybackListener
         _player.close();
         _player = null;
         _song = null;
+        _currentTimeInMilli = 0;
+        _window.setSliderValue(_currentTimeInMilli);
         _state = PlayerState.Stopped;
     }
 

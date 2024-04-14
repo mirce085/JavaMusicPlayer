@@ -4,12 +4,18 @@
  */
 
 
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.event.ActionEvent;
+
 /**
  *
  * @author nazim
  */
 public class MyFirstForm extends javax.swing.JFrame {
 
+    private MusicPlayer _player = new MusicPlayer(this);
     /**
      * Creates new form MyFirstForm
      */
@@ -25,7 +31,6 @@ public class MyFirstForm extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
         footPanel = new javax.swing.JPanel();
         musicTimeSlider = new javax.swing.JSlider();
         back = new javax.swing.JButton();
@@ -46,7 +51,6 @@ public class MyFirstForm extends javax.swing.JFrame {
         artistName = new javax.swing.JLabel();
         timeDuration = new javax.swing.JLabel();
         scrollPane = new javax.swing.JScrollPane();
-        songs = new javax.swing.JList<>();
         jPanel1 = new javax.swing.JPanel();
         _songList = new javax.swing.JLabel();
 
@@ -61,27 +65,31 @@ public class MyFirstForm extends javax.swing.JFrame {
         back.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
         pause_play.setBackground(new java.awt.Color(0, 51, 51));
-        pause_play.setFont(new java.awt.Font("Liberation Sans", 0, 36)); // NOI18N
+        pause_play.setFont(new java.awt.Font("Liberation Sans", 0, 20)); // NOI18N
         pause_play.setForeground(new java.awt.Color(255, 255, 0));
-        pause_play.setText("⏯⏸");
+        pause_play.setText("⏯");
         pause_play.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         pause_play.setMaximumSize(new java.awt.Dimension(40, 40));
         pause_play.setMinimumSize(new java.awt.Dimension(40, 40));
         pause_play.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pause_playActionPerformed(evt);
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pause_playActionPerformed(_selectedSong);
             }
         });
 
         rewind.setBackground(new java.awt.Color(0, 51, 51));
         rewind.setForeground(new java.awt.Color(255, 255, 0));
-        rewind.setText("▐▐ ");
+        rewind.setText("\uD83D\uDD04");
+        rewind.setFont(new java.awt.Font("Liberation Sans", 0, 20)); // NOI18N
         rewind.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
         next.setBackground(new java.awt.Color(0, 51, 51));
         next.setForeground(new java.awt.Color(255, 255, 0));
         next.setText("jButton4");
         next.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        musicTimeSlider.setBackground(new java.awt.Color(0, 51, 51));
 
         startTime.setForeground(new java.awt.Color(255, 255, 0));
         startTime.setText("0:00");
@@ -90,6 +98,7 @@ public class MyFirstForm extends javax.swing.JFrame {
         endTime.setText("End Time");
 
         volumeSlider.setForeground(new java.awt.Color(255, 255, 0));
+        volumeSlider.setBackground(new java.awt.Color(0, 51, 51));
 
         volumeDown.setBackground(new java.awt.Color(0, 51, 51));
         volumeDown.setForeground(new java.awt.Color(255, 255, 0));
@@ -232,14 +241,29 @@ public class MyFirstForm extends javax.swing.JFrame {
                 .addContainerGap(260, Short.MAX_VALUE))
         );
 
+
+        DefaultListModel<Song> listModel = new DefaultListModel<>();
+
+        SongService.GetAllSongs(listModel);
+
+        songs = new javax.swing.JList<>(listModel);
+
         songs.setBackground(new java.awt.Color(0, 80, 80));
         songs.setForeground(new java.awt.Color(255, 255, 0));
-        songs.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Song 1", "Song 2", "Song 3", "Song 4", "Song 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+
+        songs.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                setTitleArtistLabels(songs.getSelectedValue());
+                endTime.setText(songs.getSelectedValue().GetFormattedDuration());
+                _selectedSong = songs.getSelectedValue();
+                _player.Stop();
+            }
         });
+
         scrollPane.setViewportView(songs);
+
+        songs.setCellRenderer(new CustomCellRenderer());
 
         jPanel1.setBackground(new java.awt.Color(0, 51, 51));
 
@@ -299,13 +323,46 @@ public class MyFirstForm extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_volumeDownActionPerformed
 
-    private void pause_playActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pause_playActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_pause_playActionPerformed
+    private void pause_playActionPerformed(Song song)
+    {
+        if(_player.GetState() != PlayerState.Playing)
+        {
+            if(_selectedSong == null)
+            {
+                return;
+            }
+            sliderValueUpdated(song);
+            if(_player.GetSong() == null)
+            {
+                _player.SetSong(song);
+            }
+            _player.Play();
+        }
+        else if (_player.GetState() == PlayerState.Playing) {
+            _player.Pause();
+        }
+    }
 
     private void timePlusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timePlusActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_timePlusActionPerformed
+
+    private void sliderValueUpdated(Song song) {
+        musicTimeSlider.setMaximum(song.GetMp3File().getFrameCount());
+    }
+
+    public void setSliderValue(int frame)
+    {
+        musicTimeSlider.setValue(frame);
+    }
+
+
+    private void setTitleArtistLabels(Song song) {
+        artistName.setText(song.GetArtist());
+        musicName.setText(song.GetTitle());
+    }
+
+
 
     /**
      * @param args the command line arguments
@@ -358,7 +415,7 @@ public class MyFirstForm extends javax.swing.JFrame {
     private javax.swing.JButton pause_play;
     private javax.swing.JButton rewind;
     private javax.swing.JScrollPane scrollPane;
-    private javax.swing.JList<String> songs;
+    private javax.swing.JList<Song> songs;
     private javax.swing.JLabel startTime;
     public javax.swing.JLabel timeDuration;
     private javax.swing.JButton timeMinus;
@@ -366,5 +423,6 @@ public class MyFirstForm extends javax.swing.JFrame {
     private javax.swing.JButton volumeDown;
     private javax.swing.JSlider volumeSlider;
     private javax.swing.JButton volumeUp;
+    private Song _selectedSong;
     // End of variables declaration//GEN-END:variables
 }

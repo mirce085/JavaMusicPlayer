@@ -35,4 +35,22 @@ public class SongService {
         }
     }
 
+    public static void GetAllSongs(DefaultListModel<Song> songs)
+    {
+        File directory = new File("Songs");
+
+        File[] files = directory.listFiles();
+
+        if(files == null)
+        {
+            return;
+        }
+
+        for(File file : files)
+        {
+            Song song = new Song(file.getPath());
+            songs.addElement(song);
+        }
+    }
+
 }
