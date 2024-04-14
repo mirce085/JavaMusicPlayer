@@ -14,7 +14,9 @@ import javazoom.jl.player.advanced.PlaybackListener;
 import jdk.jfr.Description;
 import com.mpatric.mp3agic.Mp3File;
 
-
+/**
+ * The MusicPlayer class provides functionality to play songs.
+ */
 public class MusicPlayer extends PlaybackListener
 {
     private AdvancedPlayer _player;
@@ -24,7 +26,11 @@ public class MusicPlayer extends PlaybackListener
     private int _pausedPosition;
     private Mp3File _mp3File;
 
-
+    /**
+     * The main method of the MusicPlayer class.
+     *
+     * @param args The command line arguments.
+     */
     public static void main(String[] args) {
         MusicPlayer player = new MusicPlayer();
 
@@ -49,17 +55,30 @@ public class MusicPlayer extends PlaybackListener
         }
     }
 
+    /**
+     * Gets the currently selected song.
+     *
+     * @return The currently selected song.
+     */
     public Song GetSong()
     {
         return _song;
     }
 
+    /**
+     * Sets the song to be played.
+     *
+     * @param song The song to be played.
+     */
     public void SetSong(Song song)
     {
         // Here can be some checking
         _song = song;
     }
 
+    /**
+     * Plays the selected song.
+     */
     public void Play()
     {
         if(_song == null)
@@ -90,6 +109,9 @@ public class MusicPlayer extends PlaybackListener
 
     }
 
+    /**
+     * Starts the thread for playing the song.
+     */
     private void StartPlayThread()
     {
         new Thread(() -> {
@@ -112,7 +134,9 @@ public class MusicPlayer extends PlaybackListener
         }).start();
     }
 
-
+    /**
+     * Pauses the currently playing song.
+     */
     public void Pause() {
         if (_state == PlayerState.Playing) {
             _state = PlayerState.Paused;
@@ -122,6 +146,9 @@ public class MusicPlayer extends PlaybackListener
         }
     }
 
+    /**
+     * Stops the currently playing song.
+     */
     public void Stop() {
         if (_state == PlayerState.Stopped)
         {
@@ -134,6 +161,9 @@ public class MusicPlayer extends PlaybackListener
         _state = PlayerState.Stopped;
     }
 
+    /**
+     * Rewinds the currently playing song.
+     */
     public void Rewind()
     {
         if (_state == PlayerState.Stopped)
@@ -146,8 +176,12 @@ public class MusicPlayer extends PlaybackListener
         Play();
     }
 
-    /**true if front, false if back.
-     * Duration in milliseconds*/
+    /**
+     * Rewinds the currently playing song by a specified duration and direction.
+     *
+     * @param direction true if forward, false if backward.
+     * @param duration  The duration in milliseconds.
+     */
     public void RewindFor(boolean direction, int duration)
     {
         if (_state == PlayerState.Stopped)
@@ -168,7 +202,11 @@ public class MusicPlayer extends PlaybackListener
         Play();
     }
 
-    /**true if front, false if back*/
+    /**
+     * Rewinds the currently playing song by a default duration and direction (5 seconds).
+     *
+     * @param direction true if forward, false if backward.
+     */
     public void RewindFor(boolean direction) // by default, it will be 5 seconds
     {
         if (_player == null)
