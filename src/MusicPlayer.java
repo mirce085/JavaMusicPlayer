@@ -22,7 +22,6 @@ public class MusicPlayer extends PlaybackListener
     private PlayerState _state = PlayerState.Stopped;
     private Thread _playThread;
     private int _pausedPosition;
-
     private Mp3File _mp3File;
 
 
@@ -38,7 +37,7 @@ public class MusicPlayer extends PlaybackListener
         try {
             player.Play();
             Thread.sleep(5000);
-            player.Pause();
+            player.Rewind();
             Thread.sleep(2000);
             player.Play();
             Thread.sleep(5000);
@@ -81,6 +80,7 @@ public class MusicPlayer extends PlaybackListener
             _player.setPlayBackListener(this);
 
             StartPlayThread();
+            Thread.sleep(1000);
             _state = PlayerState.Playing;
         }
         catch(Exception e){
@@ -91,21 +91,24 @@ public class MusicPlayer extends PlaybackListener
 
     private void StartPlayThread()
     {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    if(_state == PlayerState.Paused){
-                        _player.play(_pausedPosition, Integer.MAX_VALUE);
-                    }else{
-                        _player.play();
-                    }
-                }catch(Exception e){
-                    e.printStackTrace();
+        new Thread(() -> {
+            try
+            {
+                if (_state == PlayerState.Paused)
+                {
+                    _player.play(_pausedPosition, Integer.MAX_VALUE);
+                }
+                else
+                {
+                    _player.play();
                 }
             }
-        }).start();
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
 
+        }).start();
     }
 
 
@@ -188,8 +191,6 @@ public class MusicPlayer extends PlaybackListener
 
     @Override
     public void playbackFinished(PlaybackEvent evt) {
-        System.out.println("paused");
-
         if(_song != null)
         {
             _pausedPosition += (int) ((double) evt.getFrame() * _song.GetFrameRatePerMilliseconds());
