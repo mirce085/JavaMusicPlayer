@@ -30,6 +30,7 @@ public class MusicPlayer extends PlaybackListener
 
         ArrayList<Song> songs = new ArrayList<Song>();
 
+
         SongService.GetAllSongs(songs);
 
         player.SetSong(songs.get(0));
