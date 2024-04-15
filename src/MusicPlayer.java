@@ -119,6 +119,7 @@ public class MusicPlayer extends PlaybackListener
         }).start();
     }
 
+
     private void StartSliderUpdateThread() {
         new Thread(() -> {
 
