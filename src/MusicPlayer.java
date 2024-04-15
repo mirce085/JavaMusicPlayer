@@ -142,6 +142,7 @@ public class MusicPlayer extends PlaybackListener
                     if(calculatedFrame >= _window.getSliderMaxValue())
                     {
                         Stop();
+                        _window.setStartTime("00:00");
                     }
 
                     Thread.sleep(1);
@@ -173,7 +174,6 @@ public class MusicPlayer extends PlaybackListener
         _song = null;
         _currentTimeInMilli = 0;
         _window.setSliderValue(_currentTimeInMilli);
-        _window.setStartTime("00:00");
         _state = PlayerState.Stopped;
     }
 

@@ -99,11 +99,18 @@ public class MyFirstForm extends javax.swing.JFrame {
 
         next.setBackground(new java.awt.Color(0, 51, 51));
         next.setForeground(new java.awt.Color(255, 255, 0));
-        next.setText("jButton4");
+        next.setText("⏹");
         next.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        next.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stopSong();
+            }
+        });
 
         musicTimeSlider.setBackground(new java.awt.Color(0, 51, 51));
         musicTimeSlider.setValue(0);
+        musicTimeSlider.setEnabled(false);
 
         startTime.setForeground(new java.awt.Color(255, 255, 0));
         startTime.setText("00:00");
@@ -114,15 +121,21 @@ public class MyFirstForm extends javax.swing.JFrame {
         volumeSlider.setForeground(new java.awt.Color(255, 255, 0));
         volumeSlider.setBackground(new java.awt.Color(0, 51, 51));
 
-
         musicTimeSlider.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                _player.Pause();
+                if(_player.GetState() == PlayerState.Playing) {
+                    _player.Pause();
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if(_player.GetState() == PlayerState.Stopped)
+                {
+                    return;
+                }
+
                 JSlider source = (JSlider) e.getSource();
 
                 int frame = source.getValue();
@@ -385,6 +398,7 @@ public class MyFirstForm extends javax.swing.JFrame {
                 _player.SetSong(song);
             }
             _player.Play();
+            musicTimeSlider.setEnabled(true);
         }
         else if (_player.GetState() == PlayerState.Playing) {
             _player.Pause();
@@ -433,6 +447,7 @@ public class MyFirstForm extends javax.swing.JFrame {
         if(_player.GetState() == PlayerState.Playing)
         {
             _player.Stop();
+            musicTimeSlider.setEnabled(false);
         }
     }
 
