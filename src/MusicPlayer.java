@@ -18,6 +18,8 @@ import com.mpatric.mp3agic.Mp3File;
 public class MusicPlayer extends PlaybackListener
 {
     private AdvancedPlayer _player;
+
+    private final Object _manualResetEvent = new Object();
     private Song _song; //Aggregation
     private PlayerState _state = PlayerState.Stopped;
     private Thread _playThread;
@@ -31,8 +33,12 @@ public class MusicPlayer extends PlaybackListener
         _window = window;
     }
 
-    public void setCurrentTimeInMilli(int timeInMilli){
+    public void SetCurrentTimeInMilli(int timeInMilli){
         _currentTimeInMilli = timeInMilli;
+    }
+
+    public void SetPausedPosition(int frame){
+        _pausedPosition = frame;
     }
 
 
@@ -77,8 +83,11 @@ public class MusicPlayer extends PlaybackListener
             _player.setPlayBackListener(this);
 
             StartPlayThread();
-            Thread.sleep(1000);
+
+            Thread.sleep(10);
             _state = PlayerState.Playing;
+            Thread.sleep(10);
+
             StartSliderUpdateThread();
         }
         catch(Exception e){
@@ -92,6 +101,7 @@ public class MusicPlayer extends PlaybackListener
         new Thread(() -> {
             try
             {
+
                 if (_state == PlayerState.Paused)
                 {
                     _player.play(_pausedPosition, Integer.MAX_VALUE);
@@ -111,6 +121,7 @@ public class MusicPlayer extends PlaybackListener
 
     private void StartSliderUpdateThread() {
         new Thread(() -> {
+
             while(_state == PlayerState.Playing){
                 try{
                     _currentTimeInMilli++;
@@ -118,6 +129,19 @@ public class MusicPlayer extends PlaybackListener
                     int calculatedFrame = (int) ((double) _currentTimeInMilli * 2.08 * _song.GetFrameRatePerMilliseconds());
 
                     _window.setSliderValue(calculatedFrame);
+
+                    int sec = (int)((_currentTimeInMilli * 2.08) / 1000);
+
+                    long minutes = sec / 60;
+                    long seconds = sec % 60;
+                    String formattedTime = String.format("%02d:%02d", minutes, seconds);
+
+                    _window.setStartTime(formattedTime);
+
+                    if(calculatedFrame >= _window.getSliderMaxValue())
+                    {
+                        Stop();
+                    }
 
                     Thread.sleep(1);
                 }catch(Exception e){
@@ -148,6 +172,7 @@ public class MusicPlayer extends PlaybackListener
         _song = null;
         _currentTimeInMilli = 0;
         _window.setSliderValue(_currentTimeInMilli);
+        _window.setStartTime("00:00");
         _state = PlayerState.Stopped;
     }
 
@@ -182,6 +207,7 @@ public class MusicPlayer extends PlaybackListener
             newPosition = Math.max(0, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) - duration);
         }
         _pausedPosition = (int)((double) newPosition * _song.GetFrameRatePerMilliseconds());
+        _currentTimeInMilli = (int)((double)_pausedPosition / _song.GetFrameRatePerMilliseconds());
         Play();
     }
 
@@ -203,6 +229,7 @@ public class MusicPlayer extends PlaybackListener
             newPosition = Math.max(0, (long)(_pausedPosition / _song.GetFrameRatePerMilliseconds()) - 5000);
         }
         _pausedPosition = (int)((double) newPosition * _song.GetFrameRatePerMilliseconds());
+        _currentTimeInMilli = (int)((double)_pausedPosition / _song.GetFrameRatePerMilliseconds());
         Play();
     }
 

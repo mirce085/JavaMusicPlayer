@@ -7,7 +7,11 @@
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  *
@@ -54,8 +58,11 @@ public class MyFirstForm extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         _songList = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(0, 0, 0));
+        setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        //setPreferredSize(new Dimension(874, 576));
 
         footPanel.setBackground(new java.awt.Color(0, 51, 51));
 
@@ -83,6 +90,12 @@ public class MyFirstForm extends javax.swing.JFrame {
         rewind.setText("\uD83D\uDD04");
         rewind.setFont(new java.awt.Font("Liberation Sans", 0, 20)); // NOI18N
         rewind.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        rewind.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                repeatSong();
+            }
+        });
 
         next.setBackground(new java.awt.Color(0, 51, 51));
         next.setForeground(new java.awt.Color(255, 255, 0));
@@ -90,15 +103,37 @@ public class MyFirstForm extends javax.swing.JFrame {
         next.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
         musicTimeSlider.setBackground(new java.awt.Color(0, 51, 51));
+        musicTimeSlider.setValue(0);
 
         startTime.setForeground(new java.awt.Color(255, 255, 0));
-        startTime.setText("0:00");
+        startTime.setText("00:00");
 
         endTime.setForeground(new java.awt.Color(255, 255, 0));
         endTime.setText("End Time");
 
         volumeSlider.setForeground(new java.awt.Color(255, 255, 0));
         volumeSlider.setBackground(new java.awt.Color(0, 51, 51));
+
+
+        musicTimeSlider.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                _player.Pause();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                JSlider source = (JSlider) e.getSource();
+
+                int frame = source.getValue();
+
+                _player.SetPausedPosition(frame);
+
+                _player.SetCurrentTimeInMilli((int) (frame / (2.08 * _player.GetSong().GetFrameRatePerMilliseconds())));
+
+                _player.Play();
+            }
+        });
 
         volumeDown.setBackground(new java.awt.Color(0, 51, 51));
         volumeDown.setForeground(new java.awt.Color(255, 255, 0));
@@ -111,19 +146,29 @@ public class MyFirstForm extends javax.swing.JFrame {
 
         volumeUp.setBackground(new java.awt.Color(0, 51, 51));
         volumeUp.setForeground(new java.awt.Color(255, 255, 0));
+        volumeUp.setFont(new java.awt.Font("Liberation Sans", 0, 10));
         volumeUp.setText("+");
 
         timeMinus.setBackground(new java.awt.Color(0, 51, 51));
         timeMinus.setForeground(new java.awt.Color(255, 255, 0));
-        timeMinus.setText("-10s");
+        timeMinus.setText("⏪");
+        timeMinus.setFont(new java.awt.Font("Liberation Sans", 0, 20));
         timeMinus.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+
+        timeMinus.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timeMinusActionPerformed();
+            }
+        });
 
         timePlus.setBackground(new java.awt.Color(0, 51, 51));
         timePlus.setForeground(new java.awt.Color(255, 255, 0));
-        timePlus.setText("+10s");
+        timePlus.setText("⏩");
+        timePlus.setFont(new java.awt.Font("Liberation Sans", 0, 20));
         timePlus.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                timePlusActionPerformed(evt);
+                timePlusActionPerformed();
             }
         });
 
@@ -146,8 +191,8 @@ public class MyFirstForm extends javax.swing.JFrame {
                 .addComponent(timePlus, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(volumeDown, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(volumeSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED).addGap(7, 7, 7)
+                .addComponent(volumeSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE).addGap(5, 5,5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(footPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(endTime)
@@ -188,7 +233,7 @@ public class MyFirstForm extends javax.swing.JFrame {
 
         musicFeatures.setBackground(new java.awt.Color(0, 70, 70));
 
-        musicName.setFont(new java.awt.Font("Noto Serif ExtraCondensed SemiBold", 1, 36)); // NOI18N
+        musicName.setFont(new java.awt.Font("Noto Serif ExtraCondensed SemiBold", 1, 16)); // NOI18N
         musicName.setForeground(new java.awt.Color(255, 255, 0));
         musicName.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         musicName.setText("Music Name");
@@ -254,10 +299,13 @@ public class MyFirstForm extends javax.swing.JFrame {
         songs.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                setTitleArtistLabels(songs.getSelectedValue());
-                endTime.setText(songs.getSelectedValue().GetFormattedDuration());
-                _selectedSong = songs.getSelectedValue();
-                _player.Stop();
+                if(_player.GetState() != PlayerState.Paused)
+                {
+                    setTitleArtistLabels(songs.getSelectedValue());
+                    endTime.setText(songs.getSelectedValue().GetFormattedDuration());
+                    _selectedSong = songs.getSelectedValue();
+                    _player.Stop();
+                }
             }
         });
 
@@ -343,12 +391,28 @@ public class MyFirstForm extends javax.swing.JFrame {
         }
     }
 
-    private void timePlusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timePlusActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_timePlusActionPerformed
+    private void timePlusActionPerformed() {
+        if(_player.GetState() == PlayerState.Playing)
+        {
+            _player.RewindFor(true);
+        }
+    }
+
+    private void timeMinusActionPerformed() {
+        if(_player.GetState() == PlayerState.Playing)
+        {
+            _player.RewindFor(false);
+        }
+    }
+
 
     private void sliderValueUpdated(Song song) {
         musicTimeSlider.setMaximum(song.GetMp3File().getFrameCount());
+    }
+
+    public void setStartTime(String time)
+    {
+        startTime.setText(time);
     }
 
     public void setSliderValue(int frame)
@@ -357,9 +421,32 @@ public class MyFirstForm extends javax.swing.JFrame {
     }
 
 
+
     private void setTitleArtistLabels(Song song) {
         artistName.setText(song.GetArtist());
         musicName.setText(song.GetTitle());
+        timeDuration.setText(song.GetFormattedDuration());
+    }
+
+    private void stopSong()
+    {
+        if(_player.GetState() == PlayerState.Playing)
+        {
+            _player.Stop();
+        }
+    }
+
+    private void repeatSong()
+    {
+        if(_player.GetState() == PlayerState.Playing)
+        {
+            _player.Rewind();
+        }
+    }
+
+    public int getSliderMaxValue()
+    {
+        return musicTimeSlider.getMaximum();
     }
 
 
