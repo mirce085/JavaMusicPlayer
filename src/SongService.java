@@ -51,6 +51,12 @@ public class SongService {
         }
     }
 
+    /**
+     * Retrieves all songs from the specified directory and adds them to the given DefaultListModel.
+     *
+     * @param songs the DefaultListModel to which the songs will be added
+     */
+
     public static void GetAllSongs(DefaultListModel<Song> songs)
     {
         File directory = new File("Songs");

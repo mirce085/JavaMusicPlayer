@@ -384,6 +384,11 @@ public class MyFirstForm extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_volumeDownActionPerformed
 
+    /**
+     * Handles the action when the play/pause button is clicked.
+     *
+     * @param song the song to be played or paused
+     */
     private void pause_playActionPerformed(Song song)
     {
         if(_player.GetState() != PlayerState.Playing)
@@ -405,6 +410,10 @@ public class MyFirstForm extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Handles the action when the time plus button is clicked.
+     * Increases playback time by default duration if the player is playing.
+     */
     private void timePlusActionPerformed() {
         if(_player.GetState() == PlayerState.Playing)
         {
@@ -412,6 +421,10 @@ public class MyFirstForm extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Handles the action when the time minus button is clicked.
+     * Decreases playback time by default duration if the player is playing.
+     */
     private void timeMinusActionPerformed() {
         if(_player.GetState() == PlayerState.Playing)
         {

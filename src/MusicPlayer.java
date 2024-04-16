@@ -15,6 +15,9 @@ import jdk.jfr.Description;
 import com.mpatric.mp3agic.Mp3File;
 
 
+/**
+ * MusicPlayer class provides functionality for playing music files.
+ */
 public class MusicPlayer extends PlaybackListener
 {
     private AdvancedPlayer _player;
@@ -28,30 +31,60 @@ public class MusicPlayer extends PlaybackListener
     private Thread _sliderThread;
     private MyFirstForm _window;
 
+    /**
+     * Constructs a MusicPlayer object.
+     *
+     * @param window the main window of the application
+     */
     public MusicPlayer(MyFirstForm window)
     {
         _window = window;
     }
 
+    /**
+     * Sets the current time in milliseconds.
+     *
+     * @param timeInMilli the current time in milliseconds
+     */
     public void SetCurrentTimeInMilli(int timeInMilli){
         _currentTimeInMilli = timeInMilli;
     }
 
+    /**
+     * Sets the paused position.
+     *
+     * @param frame the paused position in frames
+     */
     public void SetPausedPosition(int frame){
         _pausedPosition = frame;
     }
 
 
+    /**
+     * Gets the current song.
+     *
+     * @return the current song
+     */
     public Song GetSong()
     {
         return _song;
     }
 
+    /**
+     * Gets the current state of the player.
+     *
+     * @return the current state of the player
+     */
     public PlayerState GetState()
     {
         return _state;
     }
 
+    /**
+     * Sets the current song.
+     *
+     * @param song the song to set
+     */
     public void SetSong(Song song)
     {
         // Here can be some checking
@@ -62,6 +95,9 @@ public class MusicPlayer extends PlaybackListener
         _song = song;
     }
 
+    /**
+     * Starts playing the current song.
+     */
     public void Play()
     {
         if(_song == null)
@@ -96,6 +132,9 @@ public class MusicPlayer extends PlaybackListener
 
     }
 
+    /**
+     * Starts the playback thread.
+     */
     private void StartPlayThread()
     {
         new Thread(() -> {
@@ -120,6 +159,9 @@ public class MusicPlayer extends PlaybackListener
     }
 
 
+    /**
+     * Starts the slider update thread.
+     */
     private void StartSliderUpdateThread() {
 
         _sliderThread = new Thread(() -> {
@@ -156,6 +198,9 @@ public class MusicPlayer extends PlaybackListener
     }
 
 
+    /**
+     * Pauses the playback.
+     */
     public void Pause() {
         if (_state == PlayerState.Playing) {
             _state = PlayerState.Paused;
@@ -165,6 +210,9 @@ public class MusicPlayer extends PlaybackListener
         }
     }
 
+    /**
+     * Stops the playback.
+     */
     public void Stop() {
         if (_state == PlayerState.Stopped)
         {
@@ -182,6 +230,9 @@ public class MusicPlayer extends PlaybackListener
         _state = PlayerState.Stopped;
     }
 
+    /**
+     * Rewinds the playback.
+     */
     public void Rewind()
     {
         if (_state == PlayerState.Stopped)
@@ -194,8 +245,12 @@ public class MusicPlayer extends PlaybackListener
         Play();
     }
 
-    /**true if front, false if back.
-     * Duration in milliseconds*/
+    /**
+     * Rewinds the playback for a specified duration.
+     *
+     * @param direction true if forward, false if backward
+     * @param duration  the duration to rewind in milliseconds
+     */
     public void RewindFor(boolean direction, int duration)
     {
         if (_state == PlayerState.Stopped)
@@ -217,7 +272,11 @@ public class MusicPlayer extends PlaybackListener
         Play();
     }
 
-    /**true if front, false if back*/
+    /**
+     * Rewinds the playback for 5 seconds by default.
+     *
+     * @param direction true if forward, false if backward
+     */
     public void RewindFor(boolean direction) // by default, it will be 5 seconds
     {
         if (_player == null)
@@ -240,6 +299,11 @@ public class MusicPlayer extends PlaybackListener
     }
 
 
+    /**
+     * Handles the event when playback finishes.
+     *
+     * @param evt the playback event
+     */
     @Override
     public void playbackFinished(PlaybackEvent evt) {
         if(_song != null)
