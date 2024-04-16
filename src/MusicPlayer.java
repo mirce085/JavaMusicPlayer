@@ -18,14 +18,14 @@ import com.mpatric.mp3agic.Mp3File;
 public class MusicPlayer extends PlaybackListener
 {
     private AdvancedPlayer _player;
-
-    private final Object _manualResetEvent = new Object();
     private Song _song; //Aggregation
     private PlayerState _state = PlayerState.Stopped;
     private Thread _playThread;
     private int _pausedPosition;
     private Mp3File _mp3File;
     private int _currentTimeInMilli;
+
+    private Thread _sliderThread;
     private MyFirstForm _window;
 
     public MusicPlayer(MyFirstForm window)
@@ -121,7 +121,8 @@ public class MusicPlayer extends PlaybackListener
 
 
     private void StartSliderUpdateThread() {
-        new Thread(() -> {
+
+        _sliderThread = new Thread(() -> {
 
             while(_state == PlayerState.Playing){
                 try{
@@ -142,7 +143,7 @@ public class MusicPlayer extends PlaybackListener
                     if(calculatedFrame >= _window.getSliderMaxValue())
                     {
                         Stop();
-                        _window.setStartTime("00:00");
+                        break;
                     }
 
                     Thread.sleep(1);
@@ -150,7 +151,8 @@ public class MusicPlayer extends PlaybackListener
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
+        _sliderThread.start();
     }
 
 
@@ -172,8 +174,11 @@ public class MusicPlayer extends PlaybackListener
         _player.close();
         _player = null;
         _song = null;
+        _sliderThread.stop();
+        _pausedPosition = 0;
         _currentTimeInMilli = 0;
         _window.setSliderValue(_currentTimeInMilli);
+        _window.setStartTime("00:00");
         _state = PlayerState.Stopped;
     }
 
